@@ -12,8 +12,9 @@
   --ink-soft: #334155;
   --muted: #64748b;
   --border: #e2e8f0;
-  --green: #16a34a;
-  --green-soft: rgba(22, 163, 74, 0.12);
+  --green: #22c55e;
+  --green-dark: #16a34a;
+  --green-soft: rgba(34, 197, 94, 0.14);
   --warn: #c47a00;
   --warn-soft: rgba(196, 122, 0, 0.15);
   --info: #e8f0fe;
@@ -67,9 +68,14 @@ select {
 }
 
 .app-header {
-  background: var(--navy);
+  background: #1a1c23;
   color: var(--white);
   padding: 0;
+}
+
+.page-inscricao .app-tabs a.is-active {
+  border-bottom-color: var(--green);
+  color: var(--white);
 }
 
 .app-header__inner {
@@ -112,15 +118,15 @@ select {
 
 .mode-pill {
   display: inline-block;
-  font-size: 0.65rem;
-  font-weight: 700;
+  font-size: 0.62rem;
+  font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  padding: 0.35rem 0.7rem;
+  padding: 0.4rem 0.75rem;
   border-radius: 999px;
-  border: 1.5px solid var(--gold);
-  color: var(--gold);
-  background: transparent;
+  border: none;
+  color: #1a1c23;
+  background: #d4b483;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -153,6 +159,10 @@ select {
 .app-tabs a.is-active {
   color: var(--white);
   border-bottom-color: var(--red);
+}
+
+.page-inscricao .app-tabs a.is-active {
+  border-bottom-color: var(--green);
 }
 
 .wrap {
@@ -235,11 +245,12 @@ select {
 .share-promo__icon {
   width: 40px;
   height: 40px;
-  border-radius: 12px;
-  background: rgba(227, 28, 35, 0.2);
+  border-radius: 10px;
+  background: var(--green);
   display: grid;
   place-items: center;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
+  color: #fff;
 }
 
 .share-promo__hint {
@@ -340,6 +351,91 @@ select {
 
 .btn--primary:hover {
   background: var(--red-dark);
+}
+
+.btn--green {
+  background: var(--green);
+  color: var(--white);
+  margin-top: 1rem;
+  font-size: 1rem;
+  padding: 0.9rem 1.15rem;
+}
+
+.btn--green:hover {
+  background: var(--green-dark);
+}
+
+.btn__check {
+  display: inline-grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.card-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.card-title h2 {
+  margin: 0;
+}
+
+.card-title .card__lead {
+  margin: 0.25rem 0 0;
+}
+
+.card-title__icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: #e8f0fe;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.pos-row {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 520px) {
+  .pos-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.alert--success {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: var(--ink-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.alert--success strong {
+  color: var(--green-dark);
+  font-size: 0.95rem;
+}
+
+.alert--success span {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.share-hub__url--dark {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .btn--ghost {
@@ -982,11 +1078,15 @@ select {
 
 .app-footer {
   text-align: center;
-  padding: 1rem 1.15rem;
-  background: var(--footer-blue);
-  color: rgba(255, 255, 255, 0.95);
+  padding: 0.95rem 1.15rem;
+  background: #1a1c23;
+  color: rgba(255, 255, 255, 0.9);
   font-size: 0.82rem;
   margin-top: auto;
+}
+
+.page-inscricao .app-footer {
+  background: #1e3a5f;
 }
 
 .app-footer strong {

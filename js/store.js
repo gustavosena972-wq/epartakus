@@ -361,7 +361,9 @@
     },
 
     playerLink(match) {
-      return this.absUrl("j.html?m=" + encodeURIComponent(match.slug));
+      return this.absUrl(
+        "index.html?m=" + encodeURIComponent(match.slug)
+      );
     },
 
     coachLink(team) {

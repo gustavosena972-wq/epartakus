@@ -1,6 +1,6 @@
 /**
- * Epartakus — landing / hub
- * Criação do time + atalho para o painel (compartilhar fica no coach).
+ * Epartakus — tela inicial = inscrição (layout Canva)
+ * Auto-cria time/jogo se ainda não existir.
  */
 (function () {
   "use strict";
@@ -13,112 +13,241 @@
   }
 
   function escape(s) {
-    return String(s)
+    return String(s == null ? "" : s)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
   }
 
-  async function main() {
-    await Store.init();
-    qs("#modePill").textContent =
-      Store.mode === "firebase" ? "firebase" : "localStorage";
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+    return Promise.resolve();
+  }
 
+  function posOptions(placeholder, allowEmpty) {
+    let html =
+      '<option value="">' +
+      escape(placeholder || "Selecione uma posição") +
+      "</option>";
+    Store.POSITIONS.forEach(function (p) {
+      html +=
+        '<option value="' + escape(p) + '">' + escape(p) + "</option>";
+    });
+    if (allowEmpty) {
+      /* placeholder already empty value */
+    }
+    return html;
+  }
+
+  async function ensureTeamMatch() {
     let team = Store.getTeam();
     let match = Store.getActiveMatch();
-
     if (!team) {
-      renderCreate();
+      const boot = await Store.bootstrapTeam({
+        name: "Epartakus",
+        pin: Store.DEFAULT_PIN,
+      });
+      team = boot.team;
+      match = boot.match;
+    } else if (!match) {
+      match = await Store.createMatch({ label: "Jogo 1" });
+    }
+    const u = new URL(location.href);
+    const m = u.searchParams.get("m");
+    if (m) {
+      const bySlug = Store.getMatchBySlug(m);
+      if (bySlug) match = bySlug;
+    }
+    return { team, match };
+  }
+
+  async function main() {
+    await Store.init();
+    const pill = qs("#modePill");
+    if (pill && Store.mode === "firebase") {
+      pill.textContent = "FIREBASE";
+    }
+
+    const { team, match } = await ensureTeamMatch();
+    const coachUrl = Store.coachLink(team);
+    const tabCoach = qs("#tabCoach");
+    if (tabCoach) tabCoach.href = coachUrl;
+
+    if (match.status === "published") {
+      renderPublic(team, match);
       return;
     }
-    renderHub(team, match);
+
+    renderSignup(team, match);
   }
 
-  function renderCreate() {
+  function renderPublic(team, match) {
+    const lineup = Store.getLineup(match.id);
+    const tab = qs("#tabInscricao");
+    if (tab) tab.textContent = "Escalação";
+
+    function col(title, items) {
+      const list =
+        !items || !items.length
+          ? '<p class="empty">—</p>'
+          : '<ul class="list">' +
+            items
+              .map(function (p) {
+                return (
+                  "<li><div class=\"list__meta\"><div class=\"list__name\">" +
+                  escape(p.name) +
+                  '</div><div class="list__pos">' +
+                  escape(p.position || "") +
+                  "</div></div></li>"
+                );
+              })
+              .join("") +
+            "</ul>";
+      return '<div class="col-block"><h3>' + title + "</h3>" + list + "</div>";
+    }
+
     app.innerHTML =
-      '<div class="card">' +
-      "<h2>Criar lista do Epartakus</h2>" +
-      '<p class="muted">Primeiro acesso: defina o time e o PIN. No dia a dia, use o <strong>Painel do Técnico</strong> para nova lista e WhatsApp.</p>' +
-      '<label class="label">Nome do time</label>' +
-      '<input class="input" id="teamName" value="Epartakus" maxlength="40" />' +
-      '<label class="label">PIN do técnico (4 dígitos)</label>' +
-      '<input class="input" id="teamPin" value="' +
-      Store.DEFAULT_PIN +
-      '" inputmode="numeric" maxlength="8" />' +
-      '<button class="btn btn--primary" id="btnCreate">Criar primeiro jogo</button>' +
-      "</div>";
-
-    qs("#btnCreate").onclick = async function () {
-      const name = qs("#teamName").value.trim() || "Epartakus";
-      const pin = qs("#teamPin").value.trim() || Store.DEFAULT_PIN;
-      const { team, match } = await Store.bootstrapTeam({ name, pin });
-      renderHub(team, match);
-    };
-  }
-
-  function renderHub(team, match) {
-    const coachUrl = Store.coachLink(team);
-    const playerUrl = Store.playerLink(match);
-
-    app.innerHTML =
-      '<div class="card">' +
-      "<h2>" +
-      escape(team.name) +
-      " · " +
+      '<div class="public-panel">' +
+      '<div class="public-panel__head">' +
+      "<div><h2>Visualização pública da escalação</h2>" +
+      "<p>Resumo pronto para compartilhar com o grupo · " +
       escape(match.label) +
-      "</h2>" +
-      '<p class="muted">Status: <span class="status-dot' +
-      statusClass(match.status) +
-      '">' +
-      statusLabel(match.status) +
-      "</span></p>" +
-      '<div class="alert alert--info" style="margin-top:1rem">' +
-      "<strong>Uso no dia a dia:</strong> abra o Painel do Técnico → " +
-      "<em>Nova lista / próximo jogo</em> → no bloco <em>Compartilhar / Links</em> use " +
-      "<em>Copiar link</em> ou <em>Enviar no WhatsApp</em>." +
+      "</p></div>" +
+      '<span class="mode-pill">Escalação publicada</span>' +
       "</div>" +
-      '<a class="btn btn--primary" href="' +
-      escape(coachUrl) +
-      '">Abrir painel do técnico</a>' +
-      '<p class="hint">PIN: <strong>' +
-      escape(team.pin) +
-      "</strong></p>" +
-      '<a class="btn btn--soft" href="' +
-      escape(playerUrl) +
-      '">Abrir inscrição dos jogadores</a>' +
+      '<div class="public-panel__body"><div class="lineup-cols">' +
+      col("TITULARES", lineup.starters) +
+      col("BANCO DE RESERVAS", lineup.bench) +
+      col("COMISSÃO TÉCNICA", lineup.staff) +
+      "</div></div>" +
+      '<div class="public-panel__foot">Escalação da Partida - organização simples para o futebol de todos os dias</div>' +
+      "</div>";
+  }
+
+  function renderSignup(team, match) {
+    const playerUrl = Store.absUrl(
+      "index.html?m=" + encodeURIComponent(match.slug)
+    );
+    const waLink =
+      "https://wa.me/?text=" +
+      encodeURIComponent(
+        ((team && team.name) || "Epartakus") +
+          " — confirma presença no próximo jogo: " +
+          playerUrl
+      );
+
+    app.innerHTML =
+      '<div class="signup-grid">' +
+      '<div class="card card--form">' +
+      '<div class="card-title">' +
+      '<span class="card-title__icon" aria-hidden="true">👤</span>' +
+      "<div><h2>Confirme sua presença</h2>" +
+      '<p class="card__lead">Preencha seus dados para entrar na lista da próxima partida.</p></div>' +
       "</div>" +
-      '<div class="card">' +
-      "<h2>Atalhos</h2>" +
-      '<p class="muted" style="margin:0 0 .5rem">Compartilhar e gerar lista nova ficam <strong>só no painel</strong> (um lugar só).</p>' +
-      '<details><summary>Ver URLs (avançado)</summary>' +
-      '<div class="link-row" style="margin-top:.5rem">' +
-      "<strong>Jogadores</strong><code>" +
+      '<label class="label">Nome completo <span class="req">*</span></label>' +
+      '<input class="input" id="name" placeholder="Seu nome completo" autocomplete="name" />' +
+      '<div id="posBlock">' +
+      '<label class="label">Posição principal <span class="req">*</span></label>' +
+      '<select class="select" id="pos1">' +
+      posOptions("Selecione uma posição") +
+      "</select>" +
+      '<div class="pos-row">' +
+      "<div><label class=\"label\">Posição secundária</label>" +
+      '<select class="select" id="pos2">' +
+      posOptions("Não informar") +
+      "</select></div>" +
+      "<div><label class=\"label\">Posição terciária</label>" +
+      '<select class="select" id="pos3">' +
+      posOptions("Não informar") +
+      "</select></div>" +
+      "</div></div>" +
+      '<div class="alert alert--info hidden" id="staffInfo">Posições não são necessárias para membros da comissão técnica.</div>' +
+      '<label class="check"><input type="checkbox" id="isStaff" /> Faço parte da comissão técnica</label>' +
+      '<button type="button" class="btn btn--green" id="btnConfirm">' +
+      '<span class="btn__check">✓</span> Confirmar presença</button>' +
+      '<div id="feedback"></div>' +
+      "</div>" +
+      '<div class="card card--dark share-promo">' +
+      '<div class="share-promo__icon" aria-hidden="true">💬</div>' +
+      "<h2>Pronto para compartilhar</h2>" +
+      '<p class="card__lead">Esta tela foi pensada para funcionar bem no celular. Envie o link do jogo no grupo do WhatsApp e centralize as confirmações.</p>' +
+      '<div class="share-promo__hint">📱 Leva menos de um minuto para confirmar.</div>' +
+      '<p class="status-dot">Inscrições abertas</p>' +
+      '<label class="label" style="margin-top:1rem">Link da inscrição</label>' +
+      '<code class="share-hub__url share-hub__url--dark" id="playerUrlCode">' +
       escape(playerUrl) +
       "</code>" +
-      "<strong>Técnico</strong><code>" +
-      escape(coachUrl) +
-      "</code></div></details>" +
-      '<button class="btn btn--soft" id="btnReset" style="margin-top:1rem">Zerar demo (apaga dados locais)</button>' +
+      '<div class="share-actions">' +
+      '<button type="button" class="btn btn--green" id="btnCopy">Copiar link</button>' +
+      '<a class="btn btn--ghost" id="btnWa" href="' +
+      escape(waLink) +
+      '" target="_blank" rel="noopener">WhatsApp</a>' +
+      "</div>" +
+      "</div>" +
       "</div>";
 
-    qs("#btnReset").onclick = async function () {
-      if (!confirm("Apagar todos os dados locais deste navegador?")) return;
-      await Store.resetDemo();
-      location.reload();
+    qs("#isStaff").onchange = function () {
+      const staff = qs("#isStaff").checked;
+      qs("#posBlock").classList.toggle("hidden", staff);
+      qs("#staffInfo").classList.toggle("hidden", !staff);
     };
-  }
 
-  function statusLabel(s) {
-    if (s === "published") return "Escalação publicada";
-    if (s === "closed") return "Lista fechada";
-    return "Inscrições abertas";
-  }
+    qs("#btnCopy").onclick = function () {
+      copyText(playerUrl).then(function () {
+        const b = qs("#btnCopy");
+        const prev = b.textContent;
+        b.textContent = "Link copiado!";
+        setTimeout(function () {
+          b.textContent = prev;
+        }, 1600);
+      });
+    };
 
-  function statusClass(s) {
-    if (s === "published") return " status-dot--pub";
-    if (s === "closed") return " status-dot--closed";
-    return "";
+    qs("#btnConfirm").onclick = async function () {
+      const fb = qs("#feedback");
+      fb.innerHTML = "";
+      try {
+        const isStaff = qs("#isStaff").checked;
+        const pos1 = qs("#pos1").value;
+        if (!isStaff && !pos1) {
+          throw new Error("Selecione a posição principal");
+        }
+        const positions = isStaff
+          ? []
+          : [pos1, qs("#pos2").value, qs("#pos3").value].filter(Boolean);
+        await Store.confirmPlayer(match.id, {
+          name: qs("#name").value,
+          isStaff: isStaff,
+          positions: positions,
+        });
+        qs("#name").value = "";
+        qs("#isStaff").checked = false;
+        qs("#posBlock").classList.remove("hidden");
+        qs("#staffInfo").classList.add("hidden");
+        ["pos1", "pos2", "pos3"].forEach(function (id) {
+          qs("#" + id).value = "";
+        });
+        fb.innerHTML =
+          '<div class="alert alert--success">' +
+          "<strong>✓ Presença registrada!</strong>" +
+          "<span>Seu nome foi adicionado à lista. O técnico já pode organizar a escalação.</span>" +
+          "</div>";
+      } catch (e) {
+        fb.innerHTML =
+          '<div class="alert alert--err">' +
+          escape(e.message || e) +
+          "</div>";
+      }
+    };
   }
 
   main().catch(function (e) {
