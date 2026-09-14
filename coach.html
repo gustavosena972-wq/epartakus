@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1a1f2a" />
+  <title>Epartakus · Painel do Técnico</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-header__inner">
+      <div class="app-header__brand">
+        <img class="app-header__shield" src="assets/shield.svg" alt="Escudo Spartakus" />
+        <div>
+          <h1>Painel do Técnico</h1>
+          <p id="headerSub">Monte a escalação e publique para o grupo</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="app-tabs">
+    <a href="#" id="tabPlayer">Inscrição</a>
+    <a href="#" class="is-active" id="tabCoach">Painel do Técnico</a>
+  </nav>
+
+  <main class="wrap" id="app">
+    <div class="card"><p class="muted">Carregando…</p></div>
+  </main>
+
+  <footer class="app-footer">
+    <strong>Escalação da Partida</strong> · organização simples para o futebol de todos os dias
+  </footer>
+
+  <script src="firebase-config.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/pitch.js"></script>
+  <script src="js/app-coach.js"></script>
+</body>
+</html>

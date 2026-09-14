@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1a1f2a" />
+  <title>Epartakus · Escalação da Partida</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-header__inner">
+      <div class="app-header__brand">
+        <img class="app-header__shield" src="assets/shield.svg" alt="Escudo Spartakus" />
+        <div>
+          <h1>Epartakus <span class="mode-pill" id="modePill">demo</span></h1>
+          <p>Lista de presença e escalação do jogo</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap" id="app">
+    <!-- Bootstrapped by app-hub.js -->
+    <div class="card" id="loadingCard">
+      <p class="muted">Carregando…</p>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <strong>Escalação da Partida</strong> · organização simples para o futebol de todos os dias
+  </footer>
+
+  <script src="firebase-config.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/app-hub.js"></script>
+</body>
+</html>

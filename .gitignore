@@ -1,0 +1,17 @@
+# Dependencies
+/node_modules
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env / secrets
+.env
+.env.*
+*-firebase-adminsdk*.json
+serviceAccount*.json
+
+# Editor
+.idea
+.vscode
+*.swp

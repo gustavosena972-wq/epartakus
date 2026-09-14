@@ -1,0 +1,9 @@
+rules_version = '2';
+// Demo only — replace with authenticated coach writes before production.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /_epartakus/{doc} {
+      allow read, write: if true;
+    }
+  }
+}
