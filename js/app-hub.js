@@ -49,8 +49,25 @@
   }
 
   async function ensureTeamMatch() {
+    const u = new URL(location.href);
+    const m = u.searchParams.get("m");
     let team = Store.getTeam();
     let match = Store.getActiveMatch();
+
+    // Link do WhatsApp (?m=slug): nunca cria time novo — espera o estado na nuvem
+    if (m) {
+      const bySlug = Store.getMatchBySlug(m);
+      if (!bySlug) {
+        return {
+          team: team,
+          match: null,
+          missingSlug: m,
+          waitingCloud: Store.mode === "firebase",
+        };
+      }
+      return { team: team || Store.getTeam(), match: bySlug };
+    }
+
     if (!team) {
       const boot = await Store.bootstrapTeam({
         name: "Epartakus",
@@ -61,13 +78,32 @@
     } else if (!match) {
       match = await Store.createMatch({ label: "Jogo 1" });
     }
-    const u = new URL(location.href);
-    const m = u.searchParams.get("m");
-    if (m) {
-      const bySlug = Store.getMatchBySlug(m);
-      if (bySlug) match = bySlug;
-    }
     return { team, match };
+  }
+
+  function renderWaitingCloud(slug) {
+    app.innerHTML =
+      '<div class="card">' +
+      "<h2>Aguardando o técnico</h2>" +
+      '<p class="muted">Este link ainda não encontrou o jogo <code>' +
+      escape(slug) +
+      "</code> na nuvem. Peça ao técnico para abrir o painel e criar/salvar a lista, depois atualize esta página.</p>" +
+      '<button type="button" class="btn btn--primary" id="btnReload">Atualizar</button>' +
+      "</div>";
+    qs("#btnReload").addEventListener("click", function () {
+      location.reload();
+    });
+  }
+
+  function renderMissingMatch(slug) {
+    app.innerHTML =
+      '<div class="card">' +
+      "<h2>Jogo não encontrado</h2>" +
+      '<p class="muted">O link <code>' +
+      escape(slug) +
+      "</code> não existe neste aparelho. Com Firebase ligado, todos os celulares compartilham a mesma lista.</p>" +
+      '<a class="btn btn--primary" href="index.html">Abrir início</a>' +
+      "</div>";
   }
 
   async function main() {
@@ -77,7 +113,21 @@
       pill.textContent = "FIREBASE";
     }
 
-    const { team, match } = await ensureTeamMatch();
+    const result = await ensureTeamMatch();
+    if (result.missingSlug) {
+      if (result.waitingCloud) renderWaitingCloud(result.missingSlug);
+      else renderMissingMatch(result.missingSlug);
+      return;
+    }
+
+    const team = result.team;
+    const match = result.match;
+    if (!team || !match) {
+      app.innerHTML =
+        '<div class="card"><p class="muted">Não foi possível carregar o time.</p></div>';
+      return;
+    }
+
     const coachUrl = Store.coachLink(team);
     const tabCoach = qs("#tabCoach");
     if (tabCoach) tabCoach.href = coachUrl;

@@ -1,5 +1,10 @@
 rules_version = '2';
-// Demo only — replace with authenticated coach writes before production.
+// Epartakus — time amador / WhatsApp
+//
+// Tradeoff consciente: leitura e escrita públicas no doc de estado.
+// Qualquer pessoa com o link do app pode ler/alterar a lista.
+// Aceitável para uso interno do time; NÃO use para dados sensíveis.
+// Melhoria futura: Auth (e-mail/PIN) e allow write só para o técnico.
 service cloud.firestore {
   match /databases/{database}/documents {
     match /_epartakus/{doc} {

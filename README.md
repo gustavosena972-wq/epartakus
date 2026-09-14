@@ -40,19 +40,19 @@ PIN padrão na primeira criação: **`1234`**.
 
 Os links copiados/WhatsApp apontam para o GitHub Pages (ou a origem atual em http/https). Em `file://`, usa `EPARTAKUS_PUBLIC_BASE` em `firebase-config.js`.
 
-## Firebase (opcional — multi-celular)
+## Firebase (multi-celular / WhatsApp)
 
-1. Projeto em [Firebase Console](https://console.firebase.google.com) só do Epartakus.
-2. Ative **Firestore**.
-3. Cole o config em `firebase-config.js` e `EPARTAKUS_USE_FIREBASE = true`.
-4. Nas páginas HTML, carregue o SDK **antes** do app:
+O SDK já está nas páginas. Falta **só** um projeto Firebase deste time (não CodeCraft).
 
-```html
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-```
+1. [Firebase Console](https://console.firebase.google.com) → criar projeto **epartakus**
+2. Ative **Firestore** (modo teste ok para time amador)
+3. App Web → copie o config → cole em `firebase-config.js`
+4. `EPARTAKUS_USE_FIREBASE = true` → commit + push
+5. (Opcional CLI) `npx firebase-tools login` → `npx firebase-tools use epartakus` → `npx firebase-tools deploy --only firestore:rules`
 
-5. Regras: veja `firestore.rules` (troque o `allow … if true` em produção).
+**Regras** (`firestore.rules`): `allow read, write: if true` no doc `_epartakus/*` — qualquer um com o link pode alterar a lista. Ok para uso interno do time; não use para dados sensíveis.
+
+**Como verificar:** pill **FIREBASE** no topo; técnico no PC confirma presença; celular no link do WhatsApp vê o mesmo nome (dois navegadores / anônimo).
 
 ## Páginas
 

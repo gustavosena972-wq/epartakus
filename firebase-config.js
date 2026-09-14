@@ -1,12 +1,15 @@
 /**
  * Epartakus — Firebase config
  *
- * 1. Crie um projeto em https://console.firebase.google.com
- * 2. Ative Firestore Database (modo de teste ou regras do README)
- * 3. Em Configurações do projeto → Seus apps → Web, copie as chaves
- * 4. Cole abaixo e defina USE_FIREBASE = true
+ * PARA LIGAR A SYNC ENTRE CELULARES (obrigatório 1×):
+ * 1. Abra https://console.firebase.google.com (login Google)
+ * 2. Criar projeto → nome "epartakus" (só deste time; NÃO use CodeCraft)
+ * 3. Build → Firestore Database → Create database → modo teste (ou cole firestore.rules)
+ * 4. Project settings → Your apps → Web (</>) → registre "epartakus"
+ * 5. Cole as chaves abaixo e mude EPARTAKUS_USE_FIREBASE para true
+ * 6. Commit + push → GitHub Pages atualiza em ~1 min
  *
- * Enquanto as chaves forem placeholders, o app usa localStorage (demo).
+ * Enquanto as chaves forem placeholders, o app usa localStorage (só 1 navegador).
  */
 window.EPARTAKUS_FIREBASE = {
   apiKey: "YOUR_API_KEY",
@@ -17,7 +20,7 @@ window.EPARTAKUS_FIREBASE = {
   appId: "YOUR_APP_ID",
 };
 
-/** true = Firestore; false = localStorage (padrão até configurar Firebase) */
+/** true = Firestore (vários celulares); false = localStorage */
 window.EPARTAKUS_USE_FIREBASE = false;
 
 /**
