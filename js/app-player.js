@@ -83,14 +83,13 @@
     const players = Store.getPlayers(match.id);
 
     app.innerHTML =
+      '<div class="signup-grid">' +
       '<div class="card">' +
       "<h2>Confirme sua presença</h2>" +
-      '<p class="muted">Preencha o nome. Posições são opcionais — comissão técnica não precisa informar.</p>' +
-      '<p class="status-dot" style="margin:.5rem 0 0">Inscrições abertas · ' +
-      escape(match.label) +
-      "</p>" +
+      '<p class="card__lead">Preencha o nome para entrar na lista desta partida.</p>' +
       '<label class="label">Nome completo <span class="req">*</span></label>' +
       '<input class="input" id="name" placeholder="Seu nome" autocomplete="name" />' +
+      '<div class="alert alert--info">Posições não são necessárias para membros da comissão técnica.</div>' +
       '<label class="check"><input type="checkbox" id="isStaff" /> Faço parte da comissão técnica</label>' +
       '<div id="posFields">' +
       '<label class="label">Posição principal</label>' +
@@ -106,10 +105,20 @@
       posOptions() +
       "</select>" +
       "</div>" +
+      '<button class="btn btn--primary" id="btnConfirm">✓ Confirmar presença</button>' +
       '<div id="feedback"></div>' +
-      '<button class="btn btn--primary" id="btnConfirm">Confirmar presença</button>' +
       "</div>" +
-      '<div class="card" id="confirmedCard">' +
+      '<div class="card card--dark share-promo">' +
+      '<div class="share-promo__icon">💬</div>' +
+      "<h2>Pronto para compartilhar</h2>" +
+      '<p class="card__lead">Tela otimizada para celular. O técnico manda o link no WhatsApp e as confirmações ficam centralizadas.</p>' +
+      '<div class="share-promo__hint">📱 Leva menos de um minuto para confirmar.</div>' +
+      '<p class="status-dot">Inscrições abertas · ' +
+      escape(match.label) +
+      "</p>" +
+      "</div>" +
+      "</div>" +
+      '<div class="card" id="confirmedCard" style="margin-top:1rem">' +
       '<div class="section-title"><h2>Confirmados (' +
       players.length +
       ")</h2></div>" +
@@ -145,7 +154,7 @@
           qs("#" + id).value = "";
         });
         fb.innerHTML =
-          '<div class="alert alert--ok">Presença confirmada! Bom jogo ⚽</div>';
+          '<div class="alert alert--ok">✓ Presença registrada!</div>';
         renderConfirmedList(Store.getPlayers(match.id));
         qs("#confirmedCard .section-title h2").textContent =
           "Confirmados (" + Store.getPlayers(match.id).length + ")";
@@ -193,12 +202,21 @@
     document.getElementById("tabInscricao").textContent = "Escalação";
 
     app.innerHTML =
-      '<div class="card">' +
-      "<h2>Visualização pública da escalação</h2>" +
-      '<p class="muted">Resumo pronto para compartilhar com o grupo · ' +
+      '<div class="public-panel">' +
+      '<div class="public-panel__head">' +
+      "<div><h2>Visualização pública da escalação</h2>" +
+      "<p>Resumo pronto para compartilhar com o grupo · " +
       escape(match.label) +
-      "</p>" +
-      '<p class="status-dot status-dot--pub">Escalação publicada</p>' +
+      "</p></div>" +
+      '<span class="mode-pill">Escalação publicada</span>' +
+      "</div>" +
+      '<div class="public-panel__body">' +
+      '<div class="lineup-cols">' +
+      col("TITULARES", lineup.starters) +
+      col("BANCO DE RESERVAS", lineup.bench) +
+      col("COMISSÃO TÉCNICA", lineup.staff) +
+      "</div></div>" +
+      '<div class="public-panel__foot">Epartakus · organização simples para o futebol de todos os dias</div>' +
       "</div>" +
       '<div class="card">' +
       '<div class="section-title"><h2>Campo tático</h2><span class="tag">' +
@@ -206,13 +224,8 @@
       "</span></div>" +
       '<div id="pitchPublic"></div>' +
       "</div>" +
-      '<div class="lineup-cols">' +
-      col("TITULARES", lineup.starters) +
-      col("BANCO DE RESERVAS", lineup.bench) +
-      col("COMISSÃO TÉCNICA", lineup.staff) +
-      "</div>" +
-      '<div class="card" style="margin-top:1rem">' +
-      '<p class="muted">Inscrições desta lista foram fechadas após a publicação. O técnico pode abrir o próximo jogo na página inicial.</p>' +
+      '<div class="card">' +
+      '<p class="muted">Inscrições desta lista foram fechadas após a publicação. O técnico pode abrir o próximo jogo no painel.</p>' +
       '<a class="btn btn--soft" href="index.html">Ir para o início</a>' +
       "</div>";
 

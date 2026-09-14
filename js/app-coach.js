@@ -180,6 +180,17 @@
     }).join("");
 
     app.innerHTML =
+      '<div class="coach-top">' +
+      '<div class="coach-top__title"><h2>Lista de presença e escalação</h2>' +
+      "<p>" +
+      escape(team.name) +
+      " · " +
+      escape(match.label) +
+      "</p></div>" +
+      '<div class="coach-actions">' +
+      '<button type="button" class="btn btn--outline" id="btnJumpShare">Compartilhar</button>' +
+      '<button type="button" class="btn btn--primary" id="btnSaveTop">Salvar escalação</button>' +
+      "</div></div>" +
       '<div class="kpis">' +
       kpi(k.confirmed, "CONFIRMADOS") +
       kpi(lineupState.starters.length, "TITULARES") +
@@ -236,35 +247,46 @@
       '<div class="card">' +
       "<h2>Atletas confirmados</h2>" +
       '<div class="toolbar">' +
-      '<input class="input" id="search" placeholder="Buscar nome…" />' +
-      '<select class="select" id="filterPos"><option value="">Todas posições</option>' +
+      '<input class="input" id="search" placeholder="Buscar atleta" />' +
+      '<select class="select" id="filterPos"><option value="">Filtrar por posição</option>' +
       Store.POSITIONS.map(function (p) {
         return '<option value="' + escape(p) + '">' + escape(p) + "</option>";
       }).join("") +
       "</select></div>" +
+      '<button type="button" class="link-clear" id="btnClearFilters">Limpar filtros</button>' +
       '<div id="athleteList"></div>' +
       "</div>" +
-      '<div class="stack-2" style="display:contents">' +
-      '<div class="card" style="grid-column:1/-1">' +
+      '<div class="card">' +
       '<div class="section-title"><h2>Campo tático</h2>' +
-      '<select class="select" id="formation" style="width:auto;min-width:140px">' +
+      '<span class="tag" id="formationTag">' +
+      (match.formation === "livre" || !match.formation
+        ? "FORMAÇÃO LIVRE"
+        : escape(match.formation)) +
+      "</span></div>" +
+      '<p class="hint">Arraste os atletas para as áreas do campo ou use os controles de lista.</p>' +
+      '<label class="label">Formação</label>' +
+      '<select class="select" id="formation" style="max-width:200px;margin-bottom:.75rem">' +
       formations +
-      "</select></div>" +
-      '<p class="hint">Arraste os chips no gramado (touch ok) ou use Titular / Banco na lista.</p>' +
+      "</select>" +
       '<div id="pitchEl"></div>' +
-      "</div>" +
       "</div></div>" +
-      '<div class="lineup-cols" style="margin-top:1rem">' +
-      '<div class="col-block"><h3>JOGADORES TITULARES</h3><ul class="list" id="startersList"></ul></div>' +
-      '<div class="col-block"><h3>BANCO DE RESERVAS</h3><ul class="list" id="benchList"></ul></div>' +
-      '<div class="col-block"><h3>COMISSÃO TÉCNICA</h3><ul class="list" id="staffList"></ul></div>' +
+      '<div class="roster-2">' +
+      '<div class="col-block"><h3>Jogadores titulares</h3>' +
+      '<p class="col-sub">Atletas que iniciam a partida.</p>' +
+      '<ul class="list" id="startersList"></ul></div>' +
+      '<div class="col-block"><h3>Banco de reservas</h3>' +
+      '<p class="col-sub">Opções disponíveis durante o jogo.</p>' +
+      '<ul class="list" id="benchList"></ul></div>' +
       "</div>" +
-      '<div class="card" style="margin-top:1rem">' +
-      '<div id="saveMsg"></div>' +
-      '<div class="btn-row">' +
+      '<div class="card">' +
+      '<div class="staff-save">' +
+      "<div><h2>Comissão técnica</h2>" +
+      '<p class="muted" style="margin:0">Equipe de apoio confirmada para a partida.</p>' +
+      '<ul class="list" id="staffList" style="margin-top:.75rem"></ul></div>' +
       '<button class="btn btn--primary" id="btnSave">Salvar escalação</button>' +
-      '<button class="btn btn--dark" id="btnNext">Nova lista / próximo jogo</button>' +
       "</div>" +
+      '<div id="saveMsg"></div>' +
+      '<button class="btn btn--dark" id="btnNext" style="margin-top:.75rem">Nova lista / próximo jogo</button>' +
       '<p class="hint">Salvar publica titulares / banco / comissão no link dos jogadores. Nova lista zera a presença, herda a escalação e atualiza o bloco Compartilhar acima.</p>' +
       "</div>";
 
@@ -311,12 +333,38 @@
       filterPos = qs("#filterPos").value;
       renderAthletes();
     };
+    const btnClear = qs("#btnClearFilters");
+    if (btnClear) {
+      btnClear.onclick = function () {
+        searchQ = "";
+        filterPos = "";
+        qs("#search").value = "";
+        qs("#filterPos").value = "";
+        renderAthletes();
+      };
+    }
     qs("#formation").onchange = async function () {
       match.formation = qs("#formation").value;
       await Store.setFormation(match.id, match.formation);
       pitch.setFormation(match.formation);
+      const tag = qs("#formationTag");
+      if (tag) {
+        tag.textContent =
+          match.formation === "livre" || !match.formation
+            ? "FORMAÇÃO LIVRE"
+            : match.formation;
+      }
     };
     qs("#btnSave").onclick = saveAndPublish;
+    const btnSaveTop = qs("#btnSaveTop");
+    if (btnSaveTop) btnSaveTop.onclick = saveAndPublish;
+    const btnJump = qs("#btnJumpShare");
+    if (btnJump) {
+      btnJump.onclick = function () {
+        const hub = qs("#shareHub");
+        if (hub) hub.scrollIntoView({ behavior: "smooth", block: "start" });
+      };
+    }
     qs("#btnNext").onclick = nextMatch;
   }
 
