@@ -167,17 +167,23 @@
       ? '<div class="share-hub__badge">Link novo · compartilhe no grupo</div>'
       : "";
     const copyPlayerLabel = flashShare ? "Copiar link novo" : "Copiar link";
-    const formations = Store.FORMATIONS.map(function (f) {
-      return (
-        '<option value="' +
-        f +
-        '"' +
-        (match.formation === f ? " selected" : "") +
-        ">" +
-        (f === "livre" ? "Formação livre" : f) +
-        "</option>"
-      );
-    }).join("");
+    const formations = (window.EpartakusPitch.FORMATION_ORDER || Store.FORMATIONS)
+      .map(function (f) {
+        const label =
+          (window.EpartakusPitch.formationLabel &&
+            window.EpartakusPitch.formationLabel(f)) ||
+          f;
+        return (
+          '<option value="' +
+          f +
+          '"' +
+          (match.formation === f ? " selected" : "") +
+          ">" +
+          label +
+          "</option>"
+        );
+      })
+      .join("");
 
     app.innerHTML =
       '<div class="coach-top">' +
@@ -259,13 +265,15 @@
       '<div class="card">' +
       '<div class="section-title"><h2>Campo tático</h2>' +
       '<span class="tag" id="formationTag">' +
-      (match.formation === "livre" || !match.formation
-        ? "FORMAÇÃO LIVRE"
-        : escape(match.formation)) +
+      escape(
+        window.EpartakusPitch.formationLabel
+          ? window.EpartakusPitch.formationLabel(match.formation || "4-3-3")
+          : match.formation || "4-3-3"
+      ) +
       "</span></div>" +
       '<p class="hint">Arraste os atletas para as áreas do campo ou use os controles de lista.</p>' +
       '<label class="label">Formação</label>' +
-      '<select class="select" id="formation" style="max-width:200px;margin-bottom:.75rem">' +
+      '<select class="select" id="formation" style="max-width:100%;margin-bottom:.75rem">' +
       formations +
       "</select>" +
       '<div id="pitchEl"></div>' +
@@ -346,14 +354,25 @@
     qs("#formation").onchange = async function () {
       match.formation = qs("#formation").value;
       await Store.setFormation(match.id, match.formation);
-      pitch.setFormation(match.formation);
+      pitch.setFormation(match.formation, { reposition: true });
+      // Sync starter coords from pitch after formation change
+      const fromPitch = pitch.getPlayers();
+      fromPitch.forEach(function (p) {
+        const s = lineupState.starters.find(function (x) {
+          return x.name.toLowerCase() === p.name.toLowerCase();
+        });
+        if (s) {
+          s.pitchX = p.x;
+          s.pitchY = p.y;
+        }
+      });
       const tag = qs("#formationTag");
       if (tag) {
-        tag.textContent =
-          match.formation === "livre" || !match.formation
-            ? "FORMAÇÃO LIVRE"
-            : match.formation;
+        tag.textContent = window.EpartakusPitch.formationLabel
+          ? window.EpartakusPitch.formationLabel(match.formation)
+          : match.formation;
       }
+      refreshSideLists();
     };
     qs("#btnSave").onclick = saveAndPublish;
     const btnSaveTop = qs("#btnSaveTop");
@@ -674,8 +693,11 @@
 
     await Store.publishLineup(match.id, lineupState);
     match = Store.getMatchById(match.id);
+    const homeUrl = Store.playerLink(match);
     qs("#saveMsg").innerHTML =
-      '<div class="alert alert--ok">Escalação salva e publicada! Os jogadores veem titulares / banco / comissão no link da lista.</div>';
+      '<div class="alert alert--ok">Escalação salva e publicada! A simulação (campo + titulares / banco / comissão) aparece na <a href="' +
+      escape(homeUrl) +
+      '">tela inicial</a>.</div>';
     refreshSideLists();
   }
 

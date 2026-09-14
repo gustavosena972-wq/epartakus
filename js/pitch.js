@@ -1,5 +1,6 @@
 /**
  * Epartakus — campo tático (drag & drop + touch)
+ * Slots: 11 posições (GK + 10) em % do campo; y alto = defesa/próprio gol.
  */
 (function (global) {
   "use strict";
@@ -7,71 +8,224 @@
   const FORMATION_SLOTS = {
     livre: [],
     "4-3-3": [
-      { x: 50, y: 88 },
-      { x: 18, y: 68 },
-      { x: 38, y: 72 },
-      { x: 62, y: 72 },
-      { x: 82, y: 68 },
-      { x: 28, y: 48 },
+      { x: 50, y: 90 },
+      { x: 14, y: 70 },
+      { x: 36, y: 74 },
+      { x: 64, y: 74 },
+      { x: 86, y: 70 },
+      { x: 26, y: 48 },
       { x: 50, y: 52 },
-      { x: 72, y: 48 },
-      { x: 18, y: 28 },
-      { x: 50, y: 22 },
-      { x: 82, y: 28 },
+      { x: 74, y: 48 },
+      { x: 16, y: 24 },
+      { x: 50, y: 18 },
+      { x: 84, y: 24 },
     ],
-    "4-4-2": [
-      { x: 50, y: 88 },
-      { x: 18, y: 68 },
-      { x: 38, y: 72 },
-      { x: 62, y: 72 },
-      { x: 82, y: 68 },
-      { x: 18, y: 48 },
-      { x: 38, y: 50 },
-      { x: 62, y: 50 },
-      { x: 82, y: 48 },
-      { x: 38, y: 24 },
-      { x: 62, y: 24 },
+    "4-2-3-1": [
+      { x: 50, y: 90 },
+      { x: 14, y: 70 },
+      { x: 36, y: 74 },
+      { x: 64, y: 74 },
+      { x: 86, y: 70 },
+      { x: 36, y: 54 },
+      { x: 64, y: 54 },
+      { x: 16, y: 34 },
+      { x: 50, y: 36 },
+      { x: 84, y: 34 },
+      { x: 50, y: 16 },
+    ],
+    "3-4-3": [
+      { x: 50, y: 90 },
+      { x: 26, y: 72 },
+      { x: 50, y: 76 },
+      { x: 74, y: 72 },
+      { x: 12, y: 50 },
+      { x: 36, y: 52 },
+      { x: 64, y: 52 },
+      { x: 88, y: 50 },
+      { x: 18, y: 24 },
+      { x: 50, y: 18 },
+      { x: 82, y: 24 },
     ],
     "3-5-2": [
-      { x: 50, y: 88 },
+      { x: 50, y: 90 },
+      { x: 26, y: 72 },
+      { x: 50, y: 76 },
+      { x: 74, y: 72 },
+      { x: 10, y: 48 },
+      { x: 30, y: 50 },
+      { x: 50, y: 46 },
+      { x: 70, y: 50 },
+      { x: 90, y: 48 },
+      { x: 38, y: 20 },
+      { x: 62, y: 20 },
+    ],
+    "4-4-2": [
+      { x: 50, y: 90 },
+      { x: 14, y: 70 },
+      { x: 36, y: 74 },
+      { x: 64, y: 74 },
+      { x: 86, y: 70 },
+      { x: 14, y: 48 },
+      { x: 36, y: 50 },
+      { x: 64, y: 50 },
+      { x: 86, y: 48 },
+      { x: 38, y: 20 },
+      { x: 62, y: 20 },
+    ],
+    "4-1-2-1-2": [
+      { x: 50, y: 90 },
+      { x: 14, y: 70 },
+      { x: 36, y: 74 },
+      { x: 64, y: 74 },
+      { x: 86, y: 70 },
+      { x: 50, y: 58 },
+      { x: 30, y: 44 },
+      { x: 70, y: 44 },
+      { x: 50, y: 32 },
+      { x: 36, y: 16 },
+      { x: 64, y: 16 },
+    ],
+    "5-3-2": [
+      { x: 50, y: 90 },
+      { x: 8, y: 62 },
       { x: 28, y: 70 },
       { x: 50, y: 74 },
       { x: 72, y: 70 },
-      { x: 12, y: 48 },
-      { x: 32, y: 50 },
-      { x: 50, y: 46 },
-      { x: 68, y: 50 },
-      { x: 88, y: 48 },
-      { x: 38, y: 24 },
-      { x: 62, y: 24 },
+      { x: 92, y: 62 },
+      { x: 26, y: 46 },
+      { x: 50, y: 48 },
+      { x: 74, y: 46 },
+      { x: 38, y: 20 },
+      { x: 62, y: 20 },
     ],
-    "4-2-3-1": [
-      { x: 50, y: 88 },
-      { x: 18, y: 70 },
-      { x: 38, y: 74 },
-      { x: 62, y: 74 },
-      { x: 82, y: 70 },
-      { x: 38, y: 54 },
-      { x: 62, y: 54 },
-      { x: 18, y: 36 },
-      { x: 50, y: 38 },
-      { x: 82, y: 36 },
+    "5-4-1": [
+      { x: 50, y: 90 },
+      { x: 8, y: 62 },
+      { x: 28, y: 70 },
+      { x: 50, y: 74 },
+      { x: 72, y: 70 },
+      { x: 92, y: 62 },
+      { x: 14, y: 44 },
+      { x: 36, y: 46 },
+      { x: 64, y: 46 },
+      { x: 86, y: 44 },
       { x: 50, y: 18 },
     ],
-    "5-3-2": [
-      { x: 50, y: 88 },
-      { x: 10, y: 62 },
-      { x: 30, y: 70 },
-      { x: 50, y: 74 },
-      { x: 70, y: 70 },
-      { x: 90, y: 62 },
-      { x: 28, y: 46 },
-      { x: 50, y: 48 },
-      { x: 72, y: 46 },
-      { x: 38, y: 24 },
-      { x: 62, y: 24 },
+    "4-2-4": [
+      { x: 50, y: 90 },
+      { x: 14, y: 70 },
+      { x: 36, y: 74 },
+      { x: 64, y: 74 },
+      { x: 86, y: 70 },
+      { x: 36, y: 50 },
+      { x: 64, y: 50 },
+      { x: 12, y: 26 },
+      { x: 36, y: 18 },
+      { x: 64, y: 18 },
+      { x: 88, y: 26 },
+    ],
+    "3-3-4": [
+      { x: 50, y: 90 },
+      { x: 26, y: 72 },
+      { x: 50, y: 76 },
+      { x: 74, y: 72 },
+      { x: 26, y: 50 },
+      { x: 50, y: 52 },
+      { x: 74, y: 50 },
+      { x: 12, y: 26 },
+      { x: 36, y: 18 },
+      { x: 64, y: 18 },
+      { x: 88, y: 26 },
+    ],
+    "3-2-2-3": [
+      { x: 50, y: 90 },
+      { x: 26, y: 72 },
+      { x: 50, y: 76 },
+      { x: 74, y: 72 },
+      { x: 34, y: 54 },
+      { x: 66, y: 54 },
+      { x: 28, y: 38 },
+      { x: 72, y: 38 },
+      { x: 16, y: 20 },
+      { x: 50, y: 16 },
+      { x: 84, y: 20 },
+    ],
+    "4-3-1-2": [
+      { x: 50, y: 90 },
+      { x: 14, y: 70 },
+      { x: 36, y: 74 },
+      { x: 64, y: 74 },
+      { x: 86, y: 70 },
+      { x: 26, y: 52 },
+      { x: 50, y: 54 },
+      { x: 74, y: 52 },
+      { x: 50, y: 34 },
+      { x: 36, y: 16 },
+      { x: 64, y: 16 },
+    ],
+    "3-4-1-2": [
+      { x: 50, y: 90 },
+      { x: 26, y: 72 },
+      { x: 50, y: 76 },
+      { x: 74, y: 72 },
+      { x: 12, y: 50 },
+      { x: 36, y: 52 },
+      { x: 64, y: 52 },
+      { x: 88, y: 50 },
+      { x: 50, y: 34 },
+      { x: 36, y: 16 },
+      { x: 64, y: 16 },
+    ],
+    "4-1-4-1": [
+      { x: 50, y: 90 },
+      { x: 14, y: 70 },
+      { x: 36, y: 74 },
+      { x: 64, y: 74 },
+      { x: 86, y: 70 },
+      { x: 50, y: 56 },
+      { x: 14, y: 38 },
+      { x: 36, y: 40 },
+      { x: 64, y: 40 },
+      { x: 86, y: 38 },
+      { x: 50, y: 16 },
     ],
   };
+
+  const FORMATION_LABELS = {
+    livre: "Formação livre",
+    "4-3-3": "4-3-3",
+    "4-2-3-1": "4-2-3-1",
+    "3-4-3": "3-4-3",
+    "3-5-2": "3-5-2",
+    "4-4-2": "4-4-2 (Linha)",
+    "4-1-2-1-2": "4-4-2 (Losango / 4-1-2-1-2)",
+    "5-3-2": "5-3-2",
+    "5-4-1": "5-4-1",
+    "4-2-4": "4-2-4",
+    "3-3-4": "3-3-4",
+    "3-2-2-3": "W-M (3-2-2-3)",
+    "4-3-1-2": "4-3-1-2",
+    "3-4-1-2": "3-4-1-2",
+    "4-1-4-1": "4-1-4-1",
+  };
+
+  const FORMATION_ORDER = [
+    "4-3-3",
+    "4-2-3-1",
+    "3-4-3",
+    "3-5-2",
+    "4-4-2",
+    "4-1-2-1-2",
+    "5-3-2",
+    "5-4-1",
+    "4-2-4",
+    "3-3-4",
+    "3-2-2-3",
+    "4-3-1-2",
+    "3-4-1-2",
+    "4-1-4-1",
+    "livre",
+  ];
 
   function initials(name) {
     return String(name || "?")
@@ -84,11 +238,12 @@
   }
 
   function Pitch(opts) {
-    this.root = typeof opts.el === "string" ? document.querySelector(opts.el) : opts.el;
+    this.root =
+      typeof opts.el === "string" ? document.querySelector(opts.el) : opts.el;
     this.readonly = !!opts.readonly;
     this.onChange = opts.onChange || function () {};
     this.formation = opts.formation || "4-3-3";
-    this.players = []; // { id, name, playerId, x, y, unconfirmed }
+    this.players = [];
     this._drag = null;
     if (this.root) this._build();
   }
@@ -120,9 +275,20 @@
     this._bindDrop();
   };
 
-  Pitch.prototype.setFormation = function (f) {
+  Pitch.prototype.setFormation = function (f, opts) {
     this.formation = f || "livre";
     this._renderSlots();
+    if (opts && opts.reposition && this.players.length) {
+      const slots = FORMATION_SLOTS[this.formation] || [];
+      this.players.forEach(function (p, i) {
+        if (slots[i]) {
+          p.x = slots[i].x;
+          p.y = slots[i].y;
+        }
+      });
+      this._renderChips();
+      this.onChange(this.getPlayers());
+    }
   };
 
   Pitch.prototype._renderSlots = function () {
@@ -146,8 +312,18 @@
       id: p.id || "chip_" + i,
       name: p.name,
       playerId: p.playerId || null,
-      x: typeof p.x === "number" ? p.x : typeof p.pitchX === "number" ? p.pitchX : 50,
-      y: typeof p.y === "number" ? p.y : typeof p.pitchY === "number" ? p.pitchY : 50,
+      x:
+        typeof p.x === "number"
+          ? p.x
+          : typeof p.pitchX === "number"
+            ? p.pitchX
+            : 50,
+      y:
+        typeof p.y === "number"
+          ? p.y
+          : typeof p.pitchY === "number"
+            ? p.pitchY
+            : 50,
       unconfirmed: !!p.unconfirmed,
       position: p.position || "",
     }));
@@ -244,7 +420,7 @@
     const slots = FORMATION_SLOTS[this.formation] || [];
     if (!slots.length) return;
     let best = null;
-    let bestD = 12; // % threshold
+    let bestD = 12;
     slots.forEach((s) => {
       const d = Math.hypot(s.x - player.x, s.y - player.y);
       if (d < bestD) {
@@ -270,7 +446,8 @@
 
     this.field.addEventListener("drop", function (e) {
       e.preventDefault();
-      const raw = e.dataTransfer && e.dataTransfer.getData("text/epartakus-player");
+      const raw =
+        e.dataTransfer && e.dataTransfer.getData("text/epartakus-player");
       if (!raw) return;
       let data;
       try {
@@ -344,6 +521,11 @@
   }
 
   Pitch.FORMATION_SLOTS = FORMATION_SLOTS;
+  Pitch.FORMATION_LABELS = FORMATION_LABELS;
+  Pitch.FORMATION_ORDER = FORMATION_ORDER;
+  Pitch.formationLabel = function (id) {
+    return FORMATION_LABELS[id] || id || "Formação livre";
+  };
   Pitch.initials = initials;
 
   global.EpartakusPitch = Pitch;

@@ -91,9 +91,15 @@
   }
 
   function renderPublic(team, match) {
+    const Pitch = window.EpartakusPitch;
     const lineup = Store.getLineup(match.id);
     const tab = qs("#tabInscricao");
     if (tab) tab.textContent = "Escalação";
+
+    const formLabel =
+      Pitch && Pitch.formationLabel
+        ? Pitch.formationLabel(match.formation || "4-3-3")
+        : match.formation || "4-3-3";
 
     function col(title, items) {
       const list =
@@ -115,22 +121,78 @@
       return '<div class="col-block"><h3>' + title + "</h3>" + list + "</div>";
     }
 
+    const playerUrl = Store.playerLink(match);
+    const waLink = Store.whatsappUrl(match, team);
+
     app.innerHTML =
       '<div class="public-panel">' +
       '<div class="public-panel__head">' +
-      "<div><h2>Visualização pública da escalação</h2>" +
-      "<p>Resumo pronto para compartilhar com o grupo · " +
+      "<div><h2>Escalação publicada</h2>" +
+      "<p>Simulação tática salva pelo técnico · " +
       escape(match.label) +
+      " · " +
+      escape(formLabel) +
       "</p></div>" +
       '<span class="mode-pill">Escalação publicada</span>' +
       "</div>" +
-      '<div class="public-panel__body"><div class="lineup-cols">' +
+      '<div class="public-panel__body" style="padding:1rem">' +
+      '<div class="card" style="margin:0 0 1rem;box-shadow:none">' +
+      '<div class="section-title"><h2>Campo tático</h2>' +
+      '<span class="tag">' +
+      escape(formLabel) +
+      "</span></div>" +
+      '<div id="pitchPublic"></div></div>' +
+      '<div class="lineup-cols">' +
       col("TITULARES", lineup.starters) +
       col("BANCO DE RESERVAS", lineup.bench) +
       col("COMISSÃO TÉCNICA", lineup.staff) +
       "</div></div>" +
       '<div class="public-panel__foot">Escalação da Partida - organização simples para o futebol de todos os dias</div>' +
-      "</div>";
+      "</div>" +
+      '<div class="card" style="margin-top:1rem">' +
+      "<h2>Compartilhar escalação</h2>" +
+      '<p class="muted">Link desta tela (já com a simulação publicada).</p>' +
+      '<code class="share-hub__url">' +
+      escape(playerUrl) +
+      "</code>" +
+      '<div class="share-actions">' +
+      '<button type="button" class="btn btn--green" id="btnCopyPub">Copiar link</button>' +
+      '<a class="btn btn--dark" href="' +
+      escape(waLink) +
+      '" target="_blank" rel="noopener">WhatsApp</a>' +
+      "</div></div>";
+
+    if (Pitch) {
+      const pitch = new Pitch({
+        el: "#pitchPublic",
+        readonly: true,
+        formation: match.formation || "4-3-3",
+      });
+      pitch.setPlayers(
+        (lineup.starters || []).map(function (s) {
+          return {
+            id: s.id,
+            name: s.name,
+            x: s.pitchX != null ? s.pitchX : s.x,
+            y: s.pitchY != null ? s.pitchY : s.y,
+            position: s.position || "",
+          };
+        })
+      );
+    }
+
+    const btnCopy = qs("#btnCopyPub");
+    if (btnCopy) {
+      btnCopy.onclick = function () {
+        copyText(playerUrl).then(function () {
+          const prev = btnCopy.textContent;
+          btnCopy.textContent = "Link copiado!";
+          setTimeout(function () {
+            btnCopy.textContent = prev;
+          }, 1600);
+        });
+      };
+    }
   }
 
   function renderSignup(team, match) {
