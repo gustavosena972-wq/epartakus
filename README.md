@@ -4,79 +4,64 @@ App **independente** do time Epartakus / Spartakus.
 **Não usa** Supabase nem qualquer projeto CodeCraft.
 
 - Stack: HTML / CSS / JS (vanilla)
-- Dados: **Firebase Firestore** (quando configurado) ou **localStorage** (demo imediato)
-- Hospedagem sugerida: GitHub Pages
+- Dados: **localStorage** (funciona já) ou **Firebase Firestore** (vários celulares)
+- Live: https://gustavosena972-wq.github.io/epartakus/
 
-## Abrir agora (demo)
+## Uso no dia a dia (técnico)
 
-1. Abra `index.html` no navegador (duplo clique ou servidor local).
-2. Clique em **Criar primeiro jogo** (PIN padrão: `1234`).
-3. Use os links gerados:
-   - **Jogadores** → `j.html?m=…`
-   - **Técnico** → `coach.html?t=…` (mesmo PIN)
+1. Abra o **Painel do Técnico** (`coach.html`) e digite o **PIN** (padrão: `1234`).
+2. No topo, o bloco **Compartilhar / Links** é o único lugar para:
+   - **Copiar link** da inscrição
+   - **Enviar no WhatsApp** (texto pronto com o link)
+3. Depois do jogo: **Nova lista / próximo jogo**
+   - Presença zera
+   - Escalação/formação são herdadas
+   - O bloco Compartilhar **atualiza sozinho** com o link novo → use de novo **Copiar link novo** ou **Enviar no WhatsApp**
+4. Monte o campo (arrastar), titulares / banco / staff → **Salvar escalação** (visão pública em 3 colunas no link dos jogadores).
 
-Servidor local (opcional, PowerShell):
+## Abrir
+
+- **Produção:** https://gustavosena972-wq.github.io/epartakus/
+- **Local:** abra `index.html` ou:
 
 ```powershell
 cd C:\Users\sandr\Projects\epartakus
 npx --yes serve .
 ```
 
-## Fluxo
+PIN padrão na primeira criação: **`1234`**.
 
-1. Jogadores confirmam presença (nome + posições; comissão oculta posições).
-2. Técnico entra com PIN, monta campo (arrastar), titulares, banco e staff.
-3. **Salvar escalação** → publica visão em 3 colunas no link dos jogadores.
-4. **Nova lista / próximo jogo** → novo link, presença zerada, **escalação/formação herdadas**.
+## localStorage vs Firebase
 
-## Firebase (passos restantes)
+| Situação | O que usar |
+|----------|------------|
+| Demo / um celular do técnico | localStorage (padrão) — links do Pages funcionam para os jogadores abrirem a inscrição; o técnico gerencia no **mesmo navegador** onde criou o time |
+| Vários dispositivos precisam ver a **mesma** lista/escalação ao vivo | Configure Firebase (abaixo) |
 
-1. Crie um projeto em [Firebase Console](https://console.firebase.google.com) **só do Epartakus**.
-2. Ative **Firestore Database** (modo de produção ou teste).
-3. Em Configurações do projeto → Seu app Web → copie o objeto `firebaseConfig`.
-4. Cole em `firebase-config.js` e defina:
+Os links copiados/WhatsApp apontam para o GitHub Pages (ou a origem atual em http/https). Em `file://`, usa `EPARTAKUS_PUBLIC_BASE` em `firebase-config.js`.
 
-```js
-window.EPARTAKUS_USE_FIREBASE = true;
-```
+## Firebase (opcional — multi-celular)
 
-5. Nas páginas HTML, carregue o SDK antes do app (exemplo):
+1. Projeto em [Firebase Console](https://console.firebase.google.com) só do Epartakus.
+2. Ative **Firestore**.
+3. Cole o config em `firebase-config.js` e `EPARTAKUS_USE_FIREBASE = true`.
+4. Nas páginas HTML, carregue o SDK **antes** do app:
 
 ```html
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js"></script>
 ```
 
-6. Regras iniciais (ajuste depois para produção):
-
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /_epartakus/{doc} {
-      allow read, write: if true; // só para demo — restrinja em produção
-    }
-  }
-}
-```
-
-Enquanto `USE_FIREBASE` for `false` ou as chaves forem placeholders, o app continua em **localStorage**.
+5. Regras: veja `firestore.rules` (troque o `allow … if true` em produção).
 
 ## Páginas
 
-| Arquivo       | Função                          |
-|---------------|---------------------------------|
-| `index.html`  | Hub: criar jogo, links, PIN     |
-| `j.html`      | Inscrição / visão pública       |
-| `coach.html`  | Painel técnico (PIN)            |
-
-## Identidade
-
-Cores do kit (vermelho + branco), escudo Spartakus em `assets/`.  
-UI em português, mobile-first (WhatsApp).
+| Arquivo | Função |
+|---------|--------|
+| `index.html` | Criar time / atalho ao painel |
+| `coach.html` | PIN + **Compartilhar / Links** + escalação + nova lista |
+| `j.html` | Inscrição dos jogadores / visão pública após publicar |
 
 ## Isolamento
 
-- Pasta: `C:\Users\sandr\Projects\epartakus`
-- **Zero** uso do projeto Supabase `eqaoanbanhryhbldlbhc` ou repos CodeCraft.
+Pasta `C:\Users\sandr\Projects\epartakus` — zero CodeCraft / Supabase `eqaoanbanhryhbldlbhc`.

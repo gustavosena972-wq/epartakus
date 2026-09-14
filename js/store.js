@@ -336,9 +336,24 @@
       return this.getPlayers(matchId).find((p) => p.name.toLowerCase() === n) || null;
     },
 
+    publicBase() {
+      const configured = String(global.EPARTAKUS_PUBLIC_BASE || "").replace(
+        /\/$/,
+        ""
+      );
+      if (location.protocol === "http:" || location.protocol === "https:") {
+        try {
+          return location.href.replace(/[^/]*$/, "").replace(/\/$/, "");
+        } catch (e) {
+          /* fall through */
+        }
+      }
+      return configured;
+    },
+
     absUrl(path) {
+      const base = this.publicBase() + "/";
       try {
-        const base = location.href.replace(/[^/]*$/, "");
         return new URL(path, base).href;
       } catch (e) {
         return path;
@@ -358,14 +373,13 @@
     whatsappShareText(match, team) {
       const link = this.playerLink(match);
       const tname = (team && team.name) || "Epartakus";
+      return tname + " — confirma presença no próximo jogo: " + link;
+    },
+
+    whatsappUrl(match, team) {
       return (
-        "⚽ *" +
-        tname +
-        "* — " +
-        (match.label || "Próximo jogo") +
-        "\n\nConfirme sua presença na lista:\n" +
-        link +
-        "\n\n_Inscrições abertas_"
+        "https://wa.me/?text=" +
+        encodeURIComponent(this.whatsappShareText(match, team))
       );
     },
   };

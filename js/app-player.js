@@ -81,13 +81,14 @@
 
   function renderSignup(team, match) {
     const players = Store.getPlayers(match.id);
-    const wa = Store.whatsappShareText(match, team);
-    const waLink = "https://wa.me/?text=" + encodeURIComponent(wa);
 
     app.innerHTML =
       '<div class="card">' +
       "<h2>Confirme sua presença</h2>" +
       '<p class="muted">Preencha o nome. Posições são opcionais — comissão técnica não precisa informar.</p>' +
+      '<p class="status-dot" style="margin:.5rem 0 0">Inscrições abertas · ' +
+      escape(match.label) +
+      "</p>" +
       '<label class="label">Nome completo <span class="req">*</span></label>' +
       '<input class="input" id="name" placeholder="Seu nome" autocomplete="name" />' +
       '<label class="check"><input type="checkbox" id="isStaff" /> Faço parte da comissão técnica</label>' +
@@ -108,22 +109,12 @@
       '<div id="feedback"></div>' +
       '<button class="btn btn--primary" id="btnConfirm">Confirmar presença</button>' +
       "</div>" +
-      '<div class="card card--dark">' +
-      "<h2>Pronto para compartilhar</h2>" +
-      '<p class="status-dot">Inscrições abertas</p>' +
-      '<div class="wa-box">' +
-      escape(wa) +
-      "</div>" +
-      '<a class="btn btn--primary" href="' +
-      waLink +
-      '" target="_blank" rel="noopener">Enviar no WhatsApp</a>' +
-      '<button class="btn btn--ghost" id="copyWa">Copiar texto</button>' +
-      "</div>" +
       '<div class="card" id="confirmedCard">' +
       '<div class="section-title"><h2>Confirmados (' +
       players.length +
       ")</h2></div>" +
       '<ul class="list" id="confirmedList"></ul>' +
+      '<p class="hint">O técnico compartilha o link pelo painel (WhatsApp). Esta tela não mostra a escalação até ele salvar.</p>' +
       "</div>";
 
     renderConfirmedList(players);
@@ -164,12 +155,6 @@
           escape(e.message || e) +
           "</div>";
       }
-    };
-
-    qs("#copyWa").onclick = function () {
-      copyText(wa).then(function () {
-        qs("#copyWa").textContent = "Copiado!";
-      });
     };
   }
 
@@ -276,19 +261,6 @@
 
   function qs(sel) {
     return document.querySelector(sel);
-  }
-
-  function copyText(text) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      return navigator.clipboard.writeText(text);
-    }
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    ta.remove();
-    return Promise.resolve();
   }
 
   main().catch(function (e) {

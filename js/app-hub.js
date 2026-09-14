@@ -1,5 +1,6 @@
 /**
  * Epartakus — landing / hub
+ * Criação do time + atalho para o painel (compartilhar fica no coach).
  */
 (function () {
   "use strict";
@@ -11,17 +12,12 @@
     return (el || document).querySelector(sel);
   }
 
-  function copyText(text) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      return navigator.clipboard.writeText(text);
-    }
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    ta.remove();
-    return Promise.resolve();
+  function escape(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
   }
 
   async function main() {
@@ -43,7 +39,7 @@
     app.innerHTML =
       '<div class="card">' +
       "<h2>Criar lista do Epartakus</h2>" +
-      '<p class="muted">Primeiro acesso: defina o time e o PIN do técnico. Depois compartilhe o link no WhatsApp.</p>' +
+      '<p class="muted">Primeiro acesso: defina o time e o PIN. No dia a dia, use o <strong>Painel do Técnico</strong> para nova lista e WhatsApp.</p>' +
       '<label class="label">Nome do time</label>' +
       '<input class="input" id="teamName" value="Epartakus" maxlength="40" />' +
       '<label class="label">PIN do técnico (4 dígitos)</label>' +
@@ -62,11 +58,8 @@
   }
 
   function renderHub(team, match) {
-    const playerUrl = Store.playerLink(match);
     const coachUrl = Store.coachLink(team);
-    const wa = Store.whatsappShareText(match, team);
-    const waLink =
-      "https://wa.me/?text=" + encodeURIComponent(wa);
+    const playerUrl = Store.playerLink(match);
 
     app.innerHTML =
       '<div class="card">' +
@@ -80,77 +73,35 @@
       '">' +
       statusLabel(match.status) +
       "</span></p>" +
-      '<div class="hub-links" style="margin-top:1rem">' +
-      '<div class="link-row">' +
-      "<strong>Link dos jogadores</strong>" +
-      "<code id='playerUrl'>" +
-      escape(playerUrl) +
-      "</code>" +
-      '<button class="btn btn--soft btn--sm" id="copyPlayer">Copiar link</button>' +
-      '<a class="btn btn--primary btn--sm" href="' +
-      escape(playerUrl) +
-      '">Abrir inscrição</a>' +
+      '<div class="alert alert--info" style="margin-top:1rem">' +
+      "<strong>Uso no dia a dia:</strong> abra o Painel do Técnico → " +
+      "<em>Nova lista / próximo jogo</em> → no bloco <em>Compartilhar / Links</em> use " +
+      "<em>Copiar link</em> ou <em>Enviar no WhatsApp</em>." +
       "</div>" +
-      '<div class="link-row">' +
-      "<strong>Painel do técnico</strong>" +
-      "<code>" +
+      '<a class="btn btn--primary" href="' +
       escape(coachUrl) +
-      "</code>" +
+      '">Abrir painel do técnico</a>' +
       '<p class="hint">PIN: <strong>' +
       escape(team.pin) +
       "</strong></p>" +
-      '<button class="btn btn--soft btn--sm" id="copyCoach">Copiar link do técnico</button>' +
-      '<a class="btn btn--dark btn--sm" href="' +
-      escape(coachUrl) +
-      '">Abrir painel</a>' +
-      "</div>" +
-      "</div>" +
-      "</div>" +
-      '<div class="card card--dark">' +
-      "<h2>Pronto para compartilhar</h2>" +
-      '<div class="wa-box" id="waBox">' +
-      escape(wa) +
-      "</div>" +
-      '<a class="btn btn--primary" href="' +
-      waLink +
-      '" target="_blank" rel="noopener">Enviar no WhatsApp</a>' +
-      '<button class="btn btn--ghost" id="copyWa">Copiar texto</button>' +
+      '<a class="btn btn--soft" href="' +
+      escape(playerUrl) +
+      '">Abrir inscrição dos jogadores</a>' +
       "</div>" +
       '<div class="card">' +
-      "<h2>Próximo jogo</h2>" +
-      '<p class="muted">Gera uma <strong>nova lista</strong> (link novo, presença zerada) e <strong>copia a escalação/formação</strong> do jogo atual até você alterar.</p>' +
-      '<button class="btn btn--primary" id="btnNext">Nova lista / próximo jogo</button>' +
-      '<button class="btn btn--soft" id="btnReset" style="margin-top:.5rem">Zerar demo (apaga dados locais)</button>' +
+      "<h2>Atalhos</h2>" +
+      '<p class="muted" style="margin:0 0 .5rem">Compartilhar e gerar lista nova ficam <strong>só no painel</strong> (um lugar só).</p>' +
+      '<details><summary>Ver URLs (avançado)</summary>' +
+      '<div class="link-row" style="margin-top:.5rem">' +
+      "<strong>Jogadores</strong><code>" +
+      escape(playerUrl) +
+      "</code>" +
+      "<strong>Técnico</strong><code>" +
+      escape(coachUrl) +
+      "</code></div></details>" +
+      '<button class="btn btn--soft" id="btnReset" style="margin-top:1rem">Zerar demo (apaga dados locais)</button>' +
       "</div>";
 
-    qs("#copyPlayer").onclick = function () {
-      copyText(playerUrl).then(function () {
-        qs("#copyPlayer").textContent = "Copiado!";
-      });
-    };
-    qs("#copyCoach").onclick = function () {
-      copyText(coachUrl).then(function () {
-        qs("#copyCoach").textContent = "Copiado!";
-      });
-    };
-    qs("#copyWa").onclick = function () {
-      copyText(wa).then(function () {
-        qs("#copyWa").textContent = "Copiado!";
-      });
-    };
-    qs("#btnNext").onclick = async function () {
-      if (
-        !confirm(
-          "Criar nova lista? Jogadores precisam confirmar de novo. A escalação atual será herdada."
-        )
-      )
-        return;
-      const next = await Store.createMatch({
-        label: "Jogo " + (Store.getMatches().length + 1),
-        copyFrom: match,
-      });
-      renderHub(team, next);
-    };
     qs("#btnReset").onclick = async function () {
       if (!confirm("Apagar todos os dados locais deste navegador?")) return;
       await Store.resetDemo();
@@ -168,14 +119,6 @@
     if (s === "published") return " status-dot--pub";
     if (s === "closed") return " status-dot--closed";
     return "";
-  }
-
-  function escape(s) {
-    return String(s)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
   }
 
   main().catch(function (e) {

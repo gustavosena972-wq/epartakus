@@ -15,6 +15,7 @@
   let lineupState = { starters: [], bench: [], staff: [] };
   let filterPos = "";
   let searchQ = "";
+  let flashShare = false;
 
   function qs(sel, el) {
     return (el || document).querySelector(sel);
@@ -30,6 +31,27 @@
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+    return Promise.resolve();
+  }
+
+  function flashBtn(btn, label) {
+    const prev = btn.textContent;
+    btn.textContent = label || "Copiado!";
+    setTimeout(function () {
+      btn.textContent = prev;
+    }, 1600);
   }
 
   function initials(name) {
@@ -136,6 +158,15 @@
       team.name + " · " + match.label;
 
     const k = Store.kpis(match.id);
+    const playerUrl = Store.playerLink(match);
+    const coachUrl = Store.coachLink(team);
+    const waText = Store.whatsappShareText(match, team);
+    const waLink = Store.whatsappUrl(match, team);
+    const shareFlashClass = flashShare ? " share-hub--flash" : "";
+    const shareBadge = flashShare
+      ? '<div class="share-hub__badge">Link novo · compartilhe no grupo</div>'
+      : "";
+    const copyPlayerLabel = flashShare ? "Copiar link novo" : "Copiar link";
     const formations = Store.FORMATIONS.map(function (f) {
       return (
         '<option value="' +
@@ -159,16 +190,47 @@
         "COMISSÃO"
       ) +
       "</div>" +
-      '<div class="card" style="margin-bottom:1rem">' +
+      '<div class="card share-hub' +
+      shareFlashClass +
+      '" id="shareHub">' +
+      shareBadge +
+      "<h2>Compartilhar / Links</h2>" +
+      '<p class="muted" style="margin:0 0 .35rem">Tudo em um só lugar: copie o link da inscrição ou mande direto no WhatsApp do grupo.</p>' +
       '<p class="muted" style="margin:0">Status: <span class="status-dot' +
       (match.status === "published" ? " status-dot--pub" : "") +
       '">' +
       (match.status === "published"
         ? "Escalação publicada"
         : "Inscrições abertas") +
-      "</span> · Link: <a href=\"" +
-      escape(Store.playerLink(match)) +
-      '">abrir lista</a></p>' +
+      "</span> · " +
+      escape(match.label) +
+      "</p>" +
+      '<label class="label">Link da inscrição (jogadores)</label>' +
+      '<code class="share-hub__url" id="playerUrlCode">' +
+      escape(playerUrl) +
+      "</code>" +
+      '<div class="share-actions">' +
+      '<button type="button" class="btn btn--primary" id="btnCopyPlayer">' +
+      copyPlayerLabel +
+      "</button>" +
+      '<a class="btn btn--dark" id="btnWa" href="' +
+      escape(waLink) +
+      '" target="_blank" rel="noopener">Enviar no WhatsApp</a>' +
+      "</div>" +
+      '<p class="hint" id="waPreview">' +
+      escape(waText) +
+      "</p>" +
+      "<details>" +
+      "<summary>Link do painel do técnico (secundário)</summary>" +
+      '<div class="link-row">' +
+      "<code>" +
+      escape(coachUrl) +
+      "</code>" +
+      '<p class="hint">PIN: <strong>' +
+      escape(team.pin) +
+      "</strong></p>" +
+      '<button type="button" class="btn btn--soft btn--sm" id="btnCopyCoach">Copiar link do técnico</button>' +
+      "</div></details>" +
       "</div>" +
       '<div class="coach-grid">' +
       '<div class="card">' +
@@ -199,16 +261,17 @@
       "</div>" +
       '<div class="card" style="margin-top:1rem">' +
       '<div id="saveMsg"></div>' +
+      '<div class="btn-row">' +
       '<button class="btn btn--primary" id="btnSave">Salvar escalação</button>' +
       '<button class="btn btn--dark" id="btnNext">Nova lista / próximo jogo</button>' +
-      '<p class="hint">Salvar publica a visão de 3 colunas no link dos jogadores e herda esta escalação no próximo jogo.</p>' +
+      "</div>" +
+      '<p class="hint">Salvar publica titulares / banco / comissão no link dos jogadores. Nova lista zera a presença, herda a escalação e atualiza o bloco Compartilhar acima.</p>' +
       "</div>";
 
     pitch = new Pitch({
       el: "#pitchEl",
       formation: match.formation || "4-3-3",
       onChange: function (players) {
-        // Sync positions back into starters by name
         players.forEach(function (p) {
           const s = lineupState.starters.find(function (x) {
             return (
@@ -221,7 +284,6 @@
             s.pitchY = p.y;
           }
         });
-        // Remove starters not on pitch anymore? Keep list; pitch is source for positions
         refreshSideLists();
       },
     });
@@ -229,6 +291,17 @@
     syncPitchFromStarters();
     renderAthletes();
     refreshSideLists();
+    bindShareHub(playerUrl, coachUrl);
+
+    if (flashShare) {
+      flashShare = false;
+      const hub = qs("#shareHub");
+      if (hub) {
+        setTimeout(function () {
+          hub.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 80);
+      }
+    }
 
     qs("#search").oninput = function () {
       searchQ = qs("#search").value.trim().toLowerCase();
@@ -242,10 +315,28 @@
       match.formation = qs("#formation").value;
       await Store.setFormation(match.id, match.formation);
       pitch.setFormation(match.formation);
-      // Auto-place empty slots if starters fewer than slots — keep current positions
     };
     qs("#btnSave").onclick = saveAndPublish;
     qs("#btnNext").onclick = nextMatch;
+  }
+
+  function bindShareHub(playerUrl, coachUrl) {
+    const copyPlayer = qs("#btnCopyPlayer");
+    if (copyPlayer) {
+      copyPlayer.onclick = function () {
+        copyText(playerUrl).then(function () {
+          flashBtn(copyPlayer, "Link copiado!");
+        });
+      };
+    }
+    const copyCoach = qs("#btnCopyCoach");
+    if (copyCoach) {
+      copyCoach.onclick = function () {
+        copyText(coachUrl).then(function () {
+          flashBtn(copyCoach, "Copiado!");
+        });
+      };
+    }
   }
 
   function kpi(n, label) {
@@ -543,11 +634,10 @@
   async function nextMatch() {
     if (
       !confirm(
-        "Criar nova lista? Presença zera; escalação e formação atuais serão copiadas."
+        "Criar nova lista? Presença zera; escalação e formação atuais serão copiadas. O bloco Compartilhar atualiza com o link novo."
       )
     )
       return;
-    // Persist current lineup draft before copying
     await Store.saveLineup(match.id, lineupState);
     const next = await Store.createMatch({
       label: "Jogo " + (Store.getMatches().length + 1),
@@ -555,12 +645,8 @@
     });
     match = next;
     qs("#tabPlayer").href = Store.playerLink(match);
+    flashShare = true;
     renderPanel();
-    alert(
-      "Nova lista criada!\n\nLink: " +
-        Store.playerLink(match) +
-        "\n\nCompartilhe no WhatsApp. A escalação anterior já está no campo."
-    );
   }
 
   // When dropping on pitch, also ensure starter list

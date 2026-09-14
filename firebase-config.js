@@ -20,6 +20,15 @@ window.EPARTAKUS_FIREBASE = {
 /** true = Firestore; false = localStorage (padrão até configurar Firebase) */
 window.EPARTAKUS_USE_FIREBASE = false;
 
+/**
+ * Base pública dos links (WhatsApp / copiar).
+ * Em file:// usa o Pages automaticamente. Em Pages/servidor, usa a origem atual.
+ * Sobrescreva se o domínio for outro.
+ */
+window.EPARTAKUS_PUBLIC_BASE =
+  window.EPARTAKUS_PUBLIC_BASE ||
+  "https://gustavosena972-wq.github.io/epartakus";
+
 /** Detecta se a config ainda é placeholder */
 window.epartakusFirebaseReady = function () {
   const c = window.EPARTAKUS_FIREBASE;
