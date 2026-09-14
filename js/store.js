@@ -226,6 +226,8 @@
         formation: (prev && prev.formation) || "4-3-3",
         label,
         publishedAt: null,
+        lineupPublished: false,
+        previousSnapshot: null,
         createdAt: Date.now(),
         previousMatchId: prev ? prev.id : null,
       };
@@ -300,14 +302,79 @@
       await this.persist();
     },
 
+    _snapshotMatch(matchId) {
+      const m = this._db.matches[matchId];
+      if (!m) return null;
+      const L = this.getLineup(matchId);
+      return {
+        formation: m.formation || "4-3-3",
+        status: m.status || "open",
+        publishedAt: m.publishedAt || null,
+        lineupPublished: !!m.lineupPublished,
+        lineup: {
+          starters: JSON.parse(JSON.stringify(L.starters || [])),
+          bench: JSON.parse(JSON.stringify(L.bench || [])),
+          staff: JSON.parse(JSON.stringify(L.staff || [])),
+        },
+        savedAt: Date.now(),
+      };
+    },
+
+    canUndo(matchId) {
+      const m = this._db.matches[matchId];
+      return !!(m && m.previousSnapshot);
+    },
+
     async publishLineup(matchId, lineup) {
-      if (lineup) await this.saveLineup(matchId, lineup);
       const m = this._db.matches[matchId];
       if (!m) throw new Error("Jogo não encontrado");
+      // Snapshot before overwrite (for Desfazer)
+      m.previousSnapshot = this._snapshotMatch(matchId);
+      if (lineup) await this.saveLineup(matchId, lineup);
       m.status = "published";
+      m.lineupPublished = true;
       m.publishedAt = Date.now();
       await this.persist();
       return m;
+    },
+
+    async undoLastSave(matchId) {
+      const m = this._db.matches[matchId];
+      if (!m || !m.previousSnapshot) {
+        throw new Error("Nada para desfazer");
+      }
+      const snap = m.previousSnapshot;
+      this._db.lineups[matchId] = {
+        starters: JSON.parse(JSON.stringify(snap.lineup.starters || [])),
+        bench: JSON.parse(JSON.stringify(snap.lineup.bench || [])),
+        staff: JSON.parse(JSON.stringify(snap.lineup.staff || [])),
+      };
+      m.formation = snap.formation || m.formation;
+      m.status = snap.status || "open";
+      m.publishedAt = snap.publishedAt || null;
+      m.lineupPublished = !!snap.lineupPublished;
+      m.previousSnapshot = null;
+      await this.persist();
+      return m;
+    },
+
+    async reopenInscriptions(matchId) {
+      const m = this._db.matches[matchId];
+      if (!m) throw new Error("Jogo não encontrado");
+      m.status = "open";
+      // Keep lineup stored so coach can re-save; flag notes prior publish
+      m.lineupPublished = true;
+      await this.persist();
+      return m;
+    },
+
+    hasStoredLineup(matchId) {
+      const L = this.getLineup(matchId);
+      return !!(
+        (L.starters && L.starters.length) ||
+        (L.bench && L.bench.length) ||
+        (L.staff && L.staff.length)
+      );
     },
 
     async verifyPin(pin) {

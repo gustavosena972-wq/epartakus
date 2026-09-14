@@ -294,8 +294,16 @@
       '<button class="btn btn--primary" id="btnSave">Salvar escalação</button>' +
       "</div>" +
       '<div id="saveMsg"></div>' +
+      '<div class="btn-row" style="margin-top:.75rem">' +
+      '<button type="button" class="btn btn--outline" id="btnUndo"' +
+      (Store.canUndo(match.id) ? "" : " disabled") +
+      ">Desfazer último salvamento</button>" +
+      '<button type="button" class="btn btn--soft" id="btnReopen"' +
+      (match.status === "published" ? "" : " disabled") +
+      ">Reabrir inscrições</button>" +
+      "</div>" +
       '<button class="btn btn--dark" id="btnNext" style="margin-top:.75rem">Nova lista / próximo jogo</button>' +
-      '<p class="hint">Salvar publica titulares / banco / comissão no link dos jogadores. Nova lista zera a presença, herda a escalação e atualiza o bloco Compartilhar acima.</p>' +
+      '<p class="hint"><strong>Desfazer</strong> volta a escalação/formação anterior. <strong>Reabrir inscrições</strong> deixa a tela inicial com o formulário de presença de novo (mantém a escalação salva até você alterar). Nova lista zera a presença e atualiza o bloco Compartilhar.</p>' +
       "</div>";
 
     pitch = new Pitch({
@@ -385,6 +393,10 @@
       };
     }
     qs("#btnNext").onclick = nextMatch;
+    const btnUndo = qs("#btnUndo");
+    if (btnUndo) btnUndo.onclick = undoLastSave;
+    const btnReopen = qs("#btnReopen");
+    if (btnReopen) btnReopen.onclick = reopenInscriptions;
   }
 
   function bindShareHub(playerUrl, coachUrl) {
@@ -695,10 +707,59 @@
     match = Store.getMatchById(match.id);
     const homeUrl = Store.playerLink(match);
     qs("#saveMsg").innerHTML =
-      '<div class="alert alert--ok">Escalação salva e publicada! A simulação (campo + titulares / banco / comissão) aparece na <a href="' +
+      '<div class="alert alert--ok">Escalação salva e publicada! A simulação aparece na <a href="' +
       escape(homeUrl) +
-      '">tela inicial</a>.</div>';
+      '">tela inicial</a>. Use <em>Desfazer</em> ou <em>Reabrir inscrições</em> abaixo se precisar.</div>';
     refreshSideLists();
+    const btnUndo = qs("#btnUndo");
+    if (btnUndo) btnUndo.disabled = !Store.canUndo(match.id);
+    const btnReopen = qs("#btnReopen");
+    if (btnReopen) btnReopen.disabled = match.status !== "published";
+  }
+
+  async function undoLastSave() {
+    if (
+      !confirm(
+        "Desfazer o último salvamento? A escalação e a formação voltam ao estado anterior. Se era a primeira publicação, a lista deixa de aparecer como publicada na tela inicial."
+      )
+    )
+      return;
+    try {
+      await Store.undoLastSave(match.id);
+      match = Store.getMatchById(match.id);
+      qs("#saveMsg").innerHTML =
+        '<div class="alert alert--ok">Último salvamento desfeito. Escalação anterior restaurada.</div>';
+      renderPanel();
+    } catch (e) {
+      qs("#saveMsg").innerHTML =
+        '<div class="alert alert--err">' +
+        escape(e.message || e) +
+        "</div>";
+    }
+  }
+
+  async function reopenInscriptions() {
+    if (
+      !confirm(
+        "Reabrir inscrições? A tela inicial volta a mostrar «Confirme sua presença» para atrasados. A escalação atual fica guardada até você salvar de novo."
+      )
+    )
+      return;
+    try {
+      await Store.reopenInscriptions(match.id);
+      match = Store.getMatchById(match.id);
+      qs("#saveMsg").innerHTML =
+        '<div class="alert alert--ok">Inscrições reabertas. O link de Compartilhar / WhatsApp continua o mesmo — a home mostra o formulário de novo.</div>';
+      const btnReopen = qs("#btnReopen");
+      if (btnReopen) btnReopen.disabled = true;
+      // Refresh status dot in share hub without full redraw
+      renderPanel();
+    } catch (e) {
+      qs("#saveMsg").innerHTML =
+        '<div class="alert alert--err">' +
+        escape(e.message || e) +
+        "</div>";
+    }
   }
 
   async function nextMatch() {

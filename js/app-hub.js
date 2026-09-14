@@ -207,7 +207,13 @@
           playerUrl
       );
 
+    const lineupNote =
+      match.lineupPublished || Store.hasStoredLineup(match.id)
+        ? '<div class="alert alert--info" style="margin-bottom:1rem">Há uma escalação guardada pelo técnico. Depois que ele salvar de novo, o campo aparece aqui. Por agora você ainda pode confirmar presença.</div>'
+        : "";
+
     app.innerHTML =
+      lineupNote +
       '<div class="signup-grid">' +
       '<div class="card card--form">' +
       '<div class="card-title">' +
